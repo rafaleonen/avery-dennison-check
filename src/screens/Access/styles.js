@@ -42,7 +42,7 @@ export default StyleSheet.create({
         borderRadius: 16,
         backgroundColor: '#333',
         padding: 20,
-        overflow: 'hidden'
+        justifyContent: 'flex-end'
     },
 
     loading: {

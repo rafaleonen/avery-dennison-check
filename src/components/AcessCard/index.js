@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import Feather from "react-native-feather1s";
 import moment from 'moment/min/moment-with-locales';
 import moment_tz from 'moment-timezone';

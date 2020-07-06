@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, SafeAreaView, StatusBar, Image, TouchableOpacity, ActivityIndicator, FlatList, Modal, Alert } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, Image, TouchableOpacity, ActivityIndicator, FlatList, Modal, Alert, KeyboardAvoidingView, ScrollView, SectionList } from 'react-native';
 import Feather from "react-native-feather1s";
 import { useNavigation } from '@react-navigation/native';
 import { Form } from '@unform/mobile';
 import axios from 'axios';
 import qs from 'qs';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import styles from './styles';
 import logo from '../../assets/logo_m.png';
@@ -12,12 +13,14 @@ import logo from '../../assets/logo_m.png';
 import NumberInput from '../../components/NumberInput';
 import SingleInput from '../../components/SingleInput';
 import CheckInput from '../../components/CheckInput';
+import TxtInput from '../../components/TxtInput';
 import HomeHeader from '../../components/HomeHeader';
 import AcessCard from '../../components/AcessCard';
 
 import api from '../../services/api';
 
-export default function Acess() {
+export default function Acess({route}) {
+    const { registerNumber } = route.params;
     const formRef = useRef(null);
 
     const [isLoading, setIsLoading] = useState(true);
@@ -40,12 +43,12 @@ export default function Acess() {
 
     async function handleSubmit() {
         entries.forEach(entry => {
-            if(formRef.current.getFieldValue(entry) === undefined) {
+            if (formRef.current.getFieldValue(entry) === undefined) {
                 formRef.current.setFieldError(entry, 'Campo obrigatório');
                 setHasError(true);
             }
 
-            else if(formRef.current.getFieldValue(entry) === 'Sim') {
+            else if (formRef.current.getFieldValue(entry) === 'Sim') {
                 setAccessStatus(false);
             }
 
@@ -56,7 +59,7 @@ export default function Acess() {
     }
 
     useEffect(() => {
-        if(hasError) {
+        if (hasError) {
             Alert.alert('Atenção', 'Preencha os campos obrigatórios');
             setSending(false);
             setAccessStatus(true);
@@ -68,7 +71,7 @@ export default function Acess() {
 
             // axios.post(questions[0].action, serializedData);
 
-            setShowModal(false);
+            setShowModal(true);
         }
     }, [sending]);
 
@@ -101,7 +104,7 @@ export default function Acess() {
                 <SafeAreaView style={styles.container}>
                     <HomeHeader />
                     <View style={styles.main}>
-                        <AcessCard access={accessState}/>
+                        <AcessCard access={accessState} />
                     </View>
                 </SafeAreaView>
             </Modal>
@@ -119,25 +122,26 @@ export default function Acess() {
                         <ActivityIndicator size={98} color='#600' style={styles.loading} />
                         :
                         <View style={styles.cardInput}>
-                            <Form ref={formRef} onSubmit={handleSubmit}>
-                                <FlatList
-                                    data={questions}
-                                    keyExtractor={question => question.entry}
-                                    showsVerticalScrollIndicator={false}
-                                    renderItem={({ item: question }) => {
+                            <KeyboardAwareScrollView>
+                                <Form ref={formRef} onSubmit={handleSubmit}>
+                                    {questions.map(question => {
                                         if (question.type === 'Number_Input') {
-                                            return <NumberInput name={question.entry} question={question.question} />;
+                                            return <NumberInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
                                         if (question.type === 'Single_Input') {
                                             const answers = question.answers.split('/');
-                                            return <SingleInput name={question.entry} question={question.question} answers={answers} />;
+                                            return <SingleInput key={question.entry} name={question.entry} question={question.question} answers={answers} />;
                                         }
                                         if (question.type === 'Check_Input') {
-                                            return <CheckInput name={question.entry} question={question.question} />;
+                                            return <CheckInput key={question.entry} name={question.entry} question={question.question} />;
+                                        }
+                                        if (question.type === 'Text_Input') {
+                                            return <TxtInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
                                         if (question.type === 'renderButton') {
                                             return (
                                                 <TouchableOpacity
+                                                    key={question.entry}
                                                     style={styles.button}
                                                     onPress={() => formRef.current.submitForm()}
                                                 >
@@ -145,10 +149,9 @@ export default function Acess() {
                                                 </TouchableOpacity>
                                             );
                                         }
-                                    }}
-                                />
-                            </Form>
-
+                                    })}
+                                </Form>
+                            </KeyboardAwareScrollView>
                         </View>
                     }
                 </View>

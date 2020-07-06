@@ -7,43 +7,74 @@ export default StyleSheet.create({
     },
 
     main: {
+        height: '100%',
         width: '100%',
-        height: '100%',
-        alignItems: 'center',
+        alignItems: 'center'
     },
 
-    cardInput: {
-        marginVertical: 20,
+    card: {
+        marginTop: 20,
         width: '90%',
-        height: 120,
-        borderColor: '#fff',
-        borderWidth: 1,
-        borderRadius: 16,
+        height: '50%',
+        borderColor: '#666',
+        borderWidth: 5,
+        borderRadius: 10,
         backgroundColor: '#333',
-        flexDirection: 'row'
-    },
-
-    inputIcon: {
-        width: '20%',
-        height: '100%',
         alignItems: 'center',
-        justifyContent: 'center',
-        borderRightWidth: 1,
-        borderColor: '#fff'
+        padding: 20,
+        paddingBottom: 60
     },
 
-    inputDescription: {
-        padding: 15,
-        width: '75%',
-    },
-
-    inputTitle: {
-        fontSize: 24,
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
         color: '#fff'
     },
 
-    inputText: {
-        paddingTop: 3,
+    subTitle: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#fff'
+    },
+
+    button: {
+        backgroundColor: '#600',
+        borderRadius: 8,
+        height: 50,
+        width: '90%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+        flexDirection: 'row',
+        marginBottom: 15
+    },
+
+    buttonText: {
         color: '#fff',
-    }
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginRight: 10
+    },
+
+    inputText: {
+        width: '100%',
+        backgroundColor: '#333',
+        color: '#fff',
+    },
+
+    registerInput: {
+        marginVertical: 6,
+        width: '100%',
+        marginTop: 30,
+        backgroundColor: '#333',
+        color: '#fff'
+    },
 });
+
+export const paperTheme = {
+    colors: {
+        primary: '#ddd',
+        placeholder: '#ddd',
+        text: '#fff'
+    }
+};
