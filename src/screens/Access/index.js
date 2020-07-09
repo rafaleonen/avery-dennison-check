@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, SafeAreaView, StatusBar, Image, TouchableOpacity, ActivityIndicator, FlatList, Modal, Alert, KeyboardAvoidingView, ScrollView, SectionList } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, Image, TouchableOpacity, ActivityIndicator, Modal, Alert } from 'react-native';
 import Feather from "react-native-feather1s";
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, StackActions } from '@react-navigation/native';
 import { Form } from '@unform/mobile';
 import axios from 'axios';
 import qs from 'qs';
@@ -19,9 +19,16 @@ import AcessCard from '../../components/AcessCard';
 
 import api from '../../services/api';
 
-export default function Acess({route}) {
+export default function Acess({ route }) {
     const { registerNumber } = route.params;
+    
     const formRef = useRef(null);
+
+    const [formUrl, setFormUrl] = useState('');
+    const [registerEntry, setRegisterEntry] = useState('');
+
+    const [points, setPoints] = useState(0);
+    const [pointsControl, setPointsControl] = useState(0);
 
     const [isLoading, setIsLoading] = useState(true);
     const [questions, setQuestions] = useState([]);
@@ -31,7 +38,6 @@ export default function Acess({route}) {
 
     const [result, setResult] = useState({});
     const [accessState, setAccessStatus] = useState(true);
-    const [errorList, setErrorList] = useState([]);
     const [hasError, setHasError] = useState(false);
 
     const navigation = useNavigation();
@@ -42,6 +48,7 @@ export default function Acess({route}) {
     }
 
     async function handleSubmit() {
+        setResult({[registerEntry]: registerNumber});
         entries.forEach(entry => {
             if (formRef.current.getFieldValue(entry) === undefined) {
                 formRef.current.setFieldError(entry, 'Campo obrigatório');
@@ -49,7 +56,10 @@ export default function Acess({route}) {
             }
 
             else if (formRef.current.getFieldValue(entry) === 'Sim') {
-                setAccessStatus(false);
+                const checkedQuestion = questions.find(question => question.entry === entry);
+                const valueOfQuestion = Number(checkedQuestion.value);
+                console.log(valueOfQuestion);
+                setPoints(oldPoints => oldPoints + valueOfQuestion);
             }
 
             setResult(oldResult => ({ ...oldResult, [entry]: formRef.current.getFieldValue(entry) }));
@@ -67,10 +77,13 @@ export default function Acess({route}) {
         }
         else if (sending === true) {
             const serializedData = qs.stringify(result);
+            console.log(points);
+            console.log(pointsControl);
             console.log(serializedData);
 
-            // axios.post(questions[0].action, serializedData);
+            // axios.post(formUrl, serializedData);
 
+            if( points >= pointsControl) setAccessStatus(false);
             setShowModal(true);
         }
     }, [sending]);
@@ -78,15 +91,23 @@ export default function Acess({route}) {
     useEffect(() => {
         api.get('')
             .then(response => {
-                const version = response.data.questions.filter(question => question.version);
+                console.log(response.data.system[0].control);
+                setPointsControl(Number(response.data.system[0].control));
 
-                const filteredQuestions = response.data.questions.filter(question => question.ref === 'Acesso');
+                setFormUrl(response.data.system[0].action2);
+
+                const filteredQuestions = response.data.questions.filter(question => {
+                    if(question.required === 'X' && question.ref === 'Acesso') {
+                        setRegisterEntry(question.entry);
+                        return;
+                    }
+
+                    return question.ref === 'Acesso';
+                });
 
                 const questionsEntries = filteredQuestions.map(question => question.entry);
 
                 setEntries(questionsEntries);
-
-                console.log(questionsEntries);
 
                 filteredQuestions.push({ type: 'renderButton', entry: 'render' });
                 setQuestions(filteredQuestions);
@@ -122,23 +143,23 @@ export default function Acess({route}) {
                         <ActivityIndicator size={98} color='#600' style={styles.loading} />
                         :
                         <View style={styles.cardInput}>
-                            <KeyboardAwareScrollView>
+                            <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
                                 <Form ref={formRef} onSubmit={handleSubmit}>
                                     {questions.map(question => {
-                                        if (question.type === 'Number_Input') {
+                                        if (question.type === 'Number_Input' && question.required !== 'X') {
                                             return <NumberInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
-                                        if (question.type === 'Single_Input') {
+                                        else if (question.type === 'Single_Input') {
                                             const answers = question.answers.split('/');
                                             return <SingleInput key={question.entry} name={question.entry} question={question.question} answers={answers} />;
                                         }
-                                        if (question.type === 'Check_Input') {
+                                        else if (question.type === 'Check_Input') {
                                             return <CheckInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
-                                        if (question.type === 'Text_Input') {
+                                        else if (question.type === 'Text_Input') {
                                             return <TxtInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
-                                        if (question.type === 'renderButton') {
+                                        else if (question.type === 'renderButton') {
                                             return (
                                                 <TouchableOpacity
                                                     key={question.entry}

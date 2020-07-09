@@ -69,6 +69,26 @@ export default StyleSheet.create({
         backgroundColor: '#333',
         color: '#fff'
     },
+
+    mainCard: {
+        height: '100%',
+        width: '100%',
+        alignItems: 'center',
+        paddingTop: 100,
+        backgroundColor: '#600'
+    },
+
+    cardTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#fff'
+    },
+
+    cardDescription: {
+        marginTop: 12,
+        fontSize: 16,
+        color: '#fff'
+    },
 });
 
 export const paperTheme = {
@@ -78,3 +98,4 @@ export const paperTheme = {
         text: '#fff'
     }
 };
+

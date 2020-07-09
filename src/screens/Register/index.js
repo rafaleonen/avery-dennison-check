@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, SafeAreaView, StatusBar, Image, TouchableOpacity, ActivityIndicator, FlatList, Modal, Alert, KeyboardAvoidingView } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, Image, TouchableOpacity, ActivityIndicator, Modal, Alert } from 'react-native';
 import Feather from "react-native-feather1s";
 import { useNavigation } from '@react-navigation/native';
 import { Form } from '@unform/mobile';
@@ -19,10 +19,13 @@ import RegisteredCard from '../../components/RegisteredCard';
 
 import api from '../../services/api';
 
-export default function Register({route}) {
+export default function Register({ route }) {
     const { registerNumber } = route.params;
+
+    const [registerEntry, setRegisterEntry] = useState('');
     const formRef = useRef(null);
 
+    const [formUrl, setFormUrl] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [questions, setQuestions] = useState([]);
     const [entries, setEntries] = useState([]);
@@ -30,10 +33,7 @@ export default function Register({route}) {
     const [showModal, setShowModal] = useState(false);
 
     const [result, setResult] = useState({});
-    const [registeredID, setRegisteredID] = useState(false);
     const [hasError, setHasError] = useState(false);
-
-    const [users, setUsers] = useState([]);
 
     const navigation = useNavigation();
 
@@ -41,18 +41,15 @@ export default function Register({route}) {
         navigation.goBack();
     }
 
-    function handleSubmit() {
+    async function handleSubmit() {
+        setResult({[registerEntry]: registerNumber});
         entries.forEach(entry => {
             if (formRef.current.getFieldValue(entry) === undefined) {
                 formRef.current.setFieldError(entry, 'Campo obrigatório');
                 setHasError(true);
             }
-            else {
-                const registered = users.some(user => user == formRef.current.getFieldValue(entry));
-                if (registered) setRegisteredID(true);
-            }
-
-            setResult(oldResult => ({ ...oldResult, [entry]: formRef.current.getFieldValue(entry) }));
+            
+        setResult(oldResult => ({ ...oldResult, [entry]: formRef.current.getFieldValue(entry) }));   
         });
         setSending(true);
     }
@@ -61,13 +58,13 @@ export default function Register({route}) {
         if (hasError) {
             Alert.alert('Atenção', 'Preencha os campos obrigatórios');
             setSending(false);
-            setRegisteredID(false);
             setHasError(false);
         }
         else if (sending === true) {
+            console.log(result);
             const serializedData = qs.stringify(result);
 
-            axios.post(questions[0].action, serializedData);
+            axios.post(formUrl, serializedData);
 
             setShowModal(true);
         }
@@ -76,19 +73,20 @@ export default function Register({route}) {
     useEffect(() => {
         api.get('')
             .then(response => {
-                const version = response.data.questions.filter(question => question.version);
+                setFormUrl(response.data.system[0].action1);
 
-                const filteredQuestions = response.data.questions.filter(question => question.ref === 'Cadastro');
-
-                const usersID = response.data.users.map(user => user.id);
-
-                setUsers(usersID);
+                const filteredQuestions = response.data.questions.filter(question => {
+                    if(question.required === 'X' && question.ref === 'Cadastro') {
+                        setRegisterEntry(question.entry);
+                        return;
+                    }
+                    
+                    return question.ref === 'Cadastro';
+                });
 
                 const questionsEntries = filteredQuestions.map(question => question.entry);
 
                 setEntries(questionsEntries);
-
-                console.log(questionsEntries);
 
                 filteredQuestions.push({ type: 'renderButton', entry: 'render' });
                 setQuestions(filteredQuestions);
@@ -106,7 +104,7 @@ export default function Register({route}) {
                 <SafeAreaView style={styles.container}>
                     <HomeHeader />
                     <View style={styles.main}>
-                        <RegisteredCard alreadyRegistered={registeredID} />
+                        <RegisteredCard />
                     </View>
                 </SafeAreaView>
             </Modal>
@@ -124,23 +122,23 @@ export default function Register({route}) {
                         <ActivityIndicator size={98} color='#600' style={styles.loading} />
                         :
                         <View style={styles.cardInput}>
-                            <KeyboardAwareScrollView>
+                            <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
                                 <Form ref={formRef} onSubmit={handleSubmit}>
                                     {questions.map(question => {
-                                        if (question.type === 'Number_Input') {
+                                        if (question.type === 'Number_Input' && question.required !== 'X') {
                                             return <NumberInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
-                                        if (question.type === 'Single_Input') {
+                                        else if (question.type === 'Single_Input') {
                                             const answers = question.answers.split('/');
                                             return <SingleInput key={question.entry} name={question.entry} question={question.question} answers={answers} />;
                                         }
-                                        if (question.type === 'Check_Input') {
+                                        else if (question.type === 'Check_Input') {
                                             return <CheckInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
-                                        if (question.type === 'Text_Input') {
+                                        else if (question.type === 'Text_Input') {
                                             return <TxtInput key={question.entry} name={question.entry} question={question.question} />;
                                         }
-                                        if (question.type === 'renderButton') {
+                                        else if (question.type === 'renderButton') {
                                             return (
                                                 <TouchableOpacity
                                                     key={question.entry}
