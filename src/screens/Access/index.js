@@ -81,7 +81,7 @@ export default function Acess({ route }) {
             console.log(pointsControl);
             console.log(serializedData);
 
-            // axios.post(formUrl, serializedData);
+            axios.post(formUrl, serializedData);
 
             if( points >= pointsControl) setAccessStatus(false);
             setShowModal(true);
